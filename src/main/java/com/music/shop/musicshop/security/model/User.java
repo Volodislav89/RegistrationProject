@@ -3,6 +3,7 @@ package com.music.shop.musicshop.security.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.music.shop.musicshop.model.Lable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -39,6 +40,11 @@ public class User implements UserDetails {
     private List<Message> messages = new ArrayList<>();
     public void addMessageToList (Message message) {
         this.messages.add(message);
+    }
+
+    private List<Lable> lables = new ArrayList<>();
+    public void addLablesToList (Lable lable) {
+        this.lables.add(lable);
     }
 
     @Override

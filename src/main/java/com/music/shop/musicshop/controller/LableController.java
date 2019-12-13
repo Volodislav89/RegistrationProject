@@ -7,17 +7,24 @@ import com.music.shop.musicshop.model.Lable;
 import com.music.shop.musicshop.repository.ArtistRepository;
 import com.music.shop.musicshop.repository.ComposerRepository;
 import com.music.shop.musicshop.repository.LableRepository;
+import com.music.shop.musicshop.security.model.User;
+import com.music.shop.musicshop.security.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.security.Principal;
+import java.util.List;
+
 @RestController
 @CrossOrigin
 @RequestMapping("/music")
 
 public class LableController {
+    @Autowired
+    UserRepository userRepository;
     @Autowired
     LableRepository lableRepository;
     @Autowired
@@ -121,6 +128,34 @@ public class LableController {
                 tuple -> {
                     tuple.getT1().addComposerToList(tuple.getT2());
                     return lableRepository.save(tuple.getT1());
+                }
+        );
+    }
+
+    @GetMapping("/lable/user")
+    public Mono<List<Lable>> getLable(Principal principal) {
+        Mono<User> user = userRepository.findByUsername(principal.getName());
+        return user.map(u -> u.getLables());
+    }
+
+    @PostMapping("/lable/user")
+    public Mono<User> createLable(Principal principal, @RequestBody Lable lable) {
+        Mono<User> user = userRepository.findByUsername(principal.getName());
+        Mono<Lable> lable1 = lableRepository.save(lable);
+        return user.flatMap(u ->{
+            u.addLablesToList(lable);
+            return userRepository.save(u);
+        } );
+    }
+
+    @GetMapping("/lable/with/user/{lableId}")
+    public Mono<User> addLableToUser(Principal principal, @PathVariable String lableId) {
+        Mono<User> userMono = userRepository.findByUsername(principal.getName());
+        Mono<Lable> lableMono = lableRepository.findById(lableId);
+        return userMono.zipWith(lableMono).flatMap(
+                tuple -> {
+                    tuple.getT1().addLablesToList(tuple.getT2());
+                    return userRepository.save(tuple.getT1());
                 }
         );
     }
